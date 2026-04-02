@@ -11,13 +11,14 @@ from collections import defaultdict
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
+print(os.listdir("./templates"))
+
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 app = FastAPI()
 
 templates = Jinja2Templates(directory="./templates")
-templates.env.cache = {}
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -25,16 +26,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse(
-        "index.html",   # ✅ FIX: correct argument order
-        {"request": request}
+        request,
+        "index.html"
     )
 
 
 @app.get("/analytics", response_class=HTMLResponse)
 def analytics(request: Request):
     return templates.TemplateResponse(
-        "analytics.html",   # ✅ FIX: correct argument order
-        {"request": request}
+        request,
+        "analytics.html"
     )
 
 # SAME COLORS
@@ -205,3 +206,27 @@ def build_transition_model(csv_path="session.csv"):
         transitions[curr][nxt] += 1
 
     return transitions
+
+@app.get("/predict")
+def predict():
+    if len(session_data) < 2:
+        return {"current": "none", "predicted": "none"}
+
+    transitions = defaultdict(lambda: defaultdict(int))
+
+    emotions = [d["emotion"] for d in session_data]
+
+    for i in range(len(emotions) - 1):
+        transitions[emotions[i]][emotions[i+1]] += 1
+
+    current = emotions[-1]
+
+    if current not in transitions:
+        return {"current": current, "predicted": "unknown"}
+
+    predicted = max(transitions[current], key=transitions[current].get)
+
+    return {
+        "current": current,
+        "predicted": predicted
+    }

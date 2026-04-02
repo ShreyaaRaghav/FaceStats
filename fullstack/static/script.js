@@ -1,4 +1,20 @@
 window.onload = () => {
+    // ✅ SAFE predict polling
+        setInterval(() => {
+            fetch("/predict")
+            .then(res => res.json())
+            .then(data => {
+                const el = document.getElementById("prediction");
+                if (el) {
+                    el.innerText =
+                        "Current: " + data.current + 
+                        " → Next: " + data.predicted;
+                }
+            })
+            .catch(() => {}); // silent fail
+        }, 2000);
+
+        
     fetch("/data")
     .then(res => res.json())
     .then(data => {
@@ -15,20 +31,6 @@ window.onload = () => {
             surprise: 6
         };
 
-        // ✅ SAFE predict polling
-        setInterval(() => {
-            fetch("/predict")
-            .then(res => res.json())
-            .then(data => {
-                const el = document.getElementById("prediction");
-                if (el) {
-                    el.innerText =
-                        "Current: " + data.current + 
-                        " → Next: " + data.predicted;
-                }
-            })
-            .catch(() => {}); // silent fail
-        }, 2000);
 
         const startTime = data[0].time;
         const times = data.map(d => (d.time - startTime).toFixed(2));
