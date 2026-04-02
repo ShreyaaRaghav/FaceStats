@@ -1,4 +1,4 @@
-````md
+
 #  EmotionSense AI  
 ### Real-Time Emotion Tracking + Predictive Intelligence
 
